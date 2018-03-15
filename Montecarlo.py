@@ -1,5 +1,6 @@
 import numpy as np
 import gym
+import random
 
 def epsilon_greedy_policy(Q, epsilon, actions):
     """ Q is a numpy array, epsilon between 0,1 
@@ -19,9 +20,9 @@ env = gym.make("FrozenLake-v0")
 gamma = 0.99 
 n_episodes = 100
 
-Q = defaultdict(lambda: np.zeros(env.action_space.n))
-R = defaultdict(lambda: np.zeros(env.action_space.n))
-N = defaultdict(lambda: np.zeros(env.action_space.n))
+Q = np.zeros([env.observation_space.n, env.action_space.n])
+R = np.zeros([env.observation_space.n, env.action_space.n])
+N = np.zeros([env.observation_space.n, env.action_space.n])
 
 actions = range(env.action_space.n)
 
@@ -38,21 +39,18 @@ for j in range(n_episodes):
         t+=1
         action = policy(state)    
         new_state, reward, done, _ =  env.step(action)
-		episode.append((state,action))
+        episode.append((state,action))
         state=new_state
 
     for s,a in episode:
         G = gamma**t*reward
-		N[state,action] +=1
+        N[state,action] +=1
         Q[state,action] += (G-Q[state,action])/N[state,action]
-    
-    # Epsilon-greedy update for the policy
-    random.seed(42)
-    ep = random.random()
-    for state,_ in episode:
-        policy[state] = np.argmax(Q[state,:]) if ep>1000/(j+1) else random.randint(0,3)    
 
-    if (j+1)%1000 == 0:
-        print("INFO: Episode {} finished after {} timesteps with r={}. \
-        Running score: {}".format(j+1, t, reward, np.mean(score)))
+    if done:
+        if len(score) < 100:
+             score.append(reward)
+        else:
+             score[j % 100] = reward
+    print("INFO: Episode {} finished after {} timesteps with r={}.".format(j+1, t, reward))
 env.close()

@@ -18,10 +18,10 @@ def epsilon_greedy_policy(Q, epsilon, actions):
 env = gym.make("FrozenLake-v0")
 Q = np.zeros([env.observation_space.n, env.action_space.n])
 
-gamma = 0.99 
+gamma = 0.99
 alpha = 0.1
 n_episodes = 100
-
+j=0
 
 actions = range(env.action_space.n)
 
@@ -33,7 +33,6 @@ for j in range(n_episodes):
     # Play randomly 10 episodes, then reduce slowly the randomness
     policy = epsilon_greedy_policy(Q, epsilon=10./(j+1), actions = actions ) 
     
-    
     ### Generate sample episode
     t=0
     while not done:
@@ -41,8 +40,8 @@ for j in range(n_episodes):
         action = policy(state)    
         new_state, reward, done, _ =  env.step(action)
         new_action = policy(new_state)
-        
-        #Book-keeping
+
+	 #Book-keeping
         if done:
             Q[state,action] = Q[state,action] + alpha*(reward-Q[state,action])
             pass
@@ -57,11 +56,6 @@ for j in range(n_episodes):
                 score.append(reward)
             else:
                 score[j % 100] = reward
-                
-                
-            if (j+1)%1000 == 0:
-                print("INFO: Episode {} finished after {} timesteps with r={}. \
-                Running score: {}".format(j+1, t, reward, np.mean(score)))
-            
-
+            print("INFO: Episode {} finished after {} timesteps with r={}. Running score: {}".format(j+1, t, reward, np.mean(score)))
+	    break
 env.close()

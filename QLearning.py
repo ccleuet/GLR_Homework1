@@ -44,11 +44,11 @@ for j in range(n_episodes):
         
         #Book-keeping
         if done:
-             Q[state,action] = Q[state,action] + alpha*(reward-Q[state,action])
+            Q[state,action] = Q[state,action] + alpha*(reward-Q[state,action])
             pass
         else:
             Q[state,action] = Q[state,action] + alpha*(reward+gamma*np.max(Q[new_state,:])-Q[state,action])   
-            pass
+	    pass
             
         state, action = new_state, new_action
             
@@ -57,11 +57,6 @@ for j in range(n_episodes):
                 score.append(reward)
             else:
                 score[j % 100] = reward
-                
-                
-            if (j+1)%1000 == 0:
-                print("INFO: Episode {} finished after {} timesteps with r={}. \
-                Running score: {}".format(j+1, t, reward, np.mean(score)))
-            
-
+            print("INFO: Episode {} finished after {} timesteps with r={}. Running score: {}".format(j+1, t, reward, np.mean(score)))
+	    break
 env.close()
