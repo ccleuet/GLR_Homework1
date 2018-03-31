@@ -12,6 +12,9 @@ class FunctionEstimator:
         self.models = []
         self.initial_state = self.featurize(env.reset())
 
+	self.replay=deque(maxlen=100);
+	self.batch=64
+
         for _ in range(n_actions):
             model = self._build_model()
             self.models.append(model)
@@ -36,10 +39,10 @@ class FunctionEstimator:
         return [self.models[a].predict([state])[0] for a in range(self.n_actions)]
         
     def training(self):
-        if len(self.D) < self.batch_size:
+        if len(self.replay) < self.batch:
             return
-        batch = random.sample(self.D,self.batch_size)
-        self.model.partial_fit(([d[0] for d in self.D],[d[1] for d in self.D]))   
+        batch = random.sample(self.replay,self.batch)
+        self.model.partial_fit(([r[0] for r in self.replay],[r[1] for r in self.replay]))   
 		
 def make_policy(estimator, epsilon, actions):
     def policy_fn(state):
@@ -54,7 +57,7 @@ def make_policy(estimator, epsilon, actions):
 	
 env = gym.make("CartPole-v0")
 
-n_episodes = 50000
+n_episodes = 10000
 gamma = 0.99
 estimator = FunctionEstimator(env,env.action_space.n)
 
@@ -78,7 +81,7 @@ for ep in range(n_episodes):
 
 		# Update the Q-function
 		if done:
-		td_target = reward
+			td_target = reward
 		if not done:
 			td_target = reward + gamma*np.amax(estimator.predict(new_state))
 	  
