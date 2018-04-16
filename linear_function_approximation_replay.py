@@ -12,6 +12,9 @@ class FunctionEstimator:
         self.models = []
         self.initial_state = self.featurize(env.reset())
 
+		self.D = deque(maxlen=2000)
+        self.batch_size = 32
+		
         for _ in range(n_actions):
             model = self._build_model()
             self.models.append(model)
@@ -78,7 +81,7 @@ for ep in range(n_episodes):
 
 		# Update the Q-function
 		if done:
-		td_target = reward
+		    td_target = reward
 		if not done:
 			td_target = reward + gamma*np.amax(estimator.predict(new_state))
 	  
