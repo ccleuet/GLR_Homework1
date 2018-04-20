@@ -1,19 +1,18 @@
 import gym
+import matplotlib.pyplot as plt
 import numpy as np
 
 import itertools
-import matplotlib
-
 import sys
 import tensorflow as tf
 import collections
 
-from lib.envs.cliff_walking import CliffWalkingEnv
-from lib import plotting
+from collections import namedtuple
+env = gym.make("CliffWalking-v0")
 
-matplotlib.style.use('ggplot')
-env = CliffWalkingEnv()
+EpisodeStats = namedtuple("Stats",["episode_lengths", "episode_rewards"])
 
+#Thanks to Denny Britz for the inspiration: https://github.com/dennybritz 
 class PolicyEstimator():
     """
     Policy Function approximator. 
@@ -89,30 +88,15 @@ class ValueEstimator():
         return loss
 
 def reinforce(env, estimator_policy, estimator_value, num_episodes, discount_factor=1.0):
-    """
-    REINFORCE (Monte Carlo Policy Gradient) Algorithm. Optimizes the policy
-    function approximator using policy gradient.
-    
-    Args:
-        env: OpenAI environment.
-        estimator_policy: Policy Function to be optimized 
-        estimator_value: Value function approximator, used as a baseline
-        num_episodes: Number of episodes to run for
-        discount_factor: Time-discount factor
-    
-    Returns:
-        An EpisodeStats object with two numpy arrays for episode_lengths and episode_rewards.
-    """
 
-    # Keeps track of useful statistics
-    stats = plotting.EpisodeStats(
+    stats = EpisodeStats(
         episode_lengths=np.zeros(num_episodes),
         episode_rewards=np.zeros(num_episodes))    
     
     Transition = collections.namedtuple("Transition", ["state", "action", "reward", "next_state", "done"])
     
     for i_episode in range(num_episodes):
-        # Reset the environment and pick the fisrst action
+        # Reset the environment and pick the first action
         state = env.reset()
         
         episode = []
@@ -133,12 +117,7 @@ def reinforce(env, estimator_policy, estimator_value, num_episodes, discount_fac
             stats.episode_rewards[i_episode] += reward
             stats.episode_lengths[i_episode] = t
             
-            # Print out which step we're on, useful for debugging.
-            print("\rStep {} @ Episode {}/{} ({})".format(
-                    t, i_episode + 1, num_episodes, stats.episode_rewards[i_episode - 1]), end="")
-            # sys.stdout.flush()
-
-            if done:
+            if done or t==400:
                 break
                 
             state = next_state
@@ -165,9 +144,6 @@ value_estimator = ValueEstimator()
 
 with tf.Session() as sess:
     sess.run(tf.initialize_all_variables())
-    # Note, due to randomness in the policy the number of episodes you need to learn a good
-    # policy may vary. ~2000-5000 seemed to work well for me.
-    stats = reinforce(env, policy_estimator, value_estimator, 2000, discount_factor=1.0)
-
-plotting.plot_episode_stats(stats, smoothing_window=25)	
-		
+    stats = reinforce(env, policy_estimator, value_estimator, 100, discount_factor=1.0)
+    print (stats);plt.plot(stats.episode_rewards);plt.title('Episode Reward without baseline');plt.grid(True);plt.savefig("with_test.png");plt.show();
+	
